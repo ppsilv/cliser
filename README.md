@@ -1,4 +1,4 @@
-## cliser
+## cliser A client/server application to learn Rust
 <pre>
 ┌───────────────────┐
 │   tcp_reader      │
@@ -74,10 +74,4 @@ Os comandos são sempre enviados pelo servidor o cliente somente responde.
 110: qual a senha
 120: qual o ID
 130: shutdown sys
-
-
-
-
-
-
 
