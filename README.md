@@ -1,5 +1,5 @@
 ## cliser
-
+<pre>
 ┌───────────────────┐
 │   tcp_reader      │
 │                   │
@@ -23,7 +23,7 @@
 │                   │
 │                   │
 └───────────────────┘
-
+</pre>
 
 Thread Manager gerência as conexões.
 
