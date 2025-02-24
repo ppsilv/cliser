@@ -69,9 +69,9 @@ A função main põe o Servidor no ar e fica ouvindo a porta configurada para o 
 Formação dos comandos: código: descrição
 
 Os comandos são sempre enviados pelo servidor o cliente somente responde.
-
+<pre>
 100: keep alive
 110: qual a senha
 120: qual o ID
 130: shutdown sys
-
+</pre>
