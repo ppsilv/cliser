@@ -4,6 +4,8 @@ use std::net::{TcpStream, TcpListener};
 use std::io::{Read, Write};
 use std::time::Duration;
 
+use config::Config;
+
 pub mod config;
 pub mod clientdata;
 //use config::Config;
@@ -16,8 +18,11 @@ pub fn conection_manager() {
 
     loop{
         // Create a TCP listener
-        let listener = TcpListener::bind("127.0.0.1:8080").unwrap();
-        println!("Listening on 127.0.0.1:8080...");
+        
+        let ip_port: String = config::get_hostip() + ":" + &config::get_port1();
+        
+        println!("Listening on {}...", ip_port);
+        let listener = TcpListener::bind(ip_port).unwrap();
     
         // Accept a TCP connection
         let (stream, _) = listener.accept().unwrap();
