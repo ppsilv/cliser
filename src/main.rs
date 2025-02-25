@@ -26,14 +26,14 @@ fn main() {
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
         .map(|()| log::set_max_level(log::LevelFilter::Info))
         .expect("could not set logger");
-    
+
      if args.len() < 2 {
          eprintln!("Usage: {} <name> [server|client]", args[0]);
          std::process::exit(1);
      }
 
     match args[1].as_str() {
-        "server" => server::server(),
+        "server" => server::conection_manager(),
         "client" => client::client(),
         _ => {
             eprintln!("Uso: {} <servidor|cliente>", args[0]);
