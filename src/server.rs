@@ -4,23 +4,15 @@ use std::net::{TcpStream, TcpListener};
 use std::io::{Read, Write};
 use std::time::Duration;
 
-use config::Config;
-
-pub mod config;
-pub mod clientdata;
-//use config::Config;
-
-
+use crate::servermod;
 
 // Define the server function in the server module
 pub fn conection_manager() {
     log::info!("Server: Server running...");
 
     loop{
-        // Create a TCP listener
-        
-        let ip_port: String = config::get_hostip() + ":" + &config::get_port1();
-        
+        // Create a TCP listener for main connection
+        let ip_port: String = servermod::config::get_hostip() + ":" + &servermod::config::get_port1();
         println!("Listening on {}...", ip_port);
         let listener = TcpListener::bind(ip_port).unwrap();
     
@@ -74,7 +66,7 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
     //1.1.3.2 - Aguarda na msgqueue tcp_reader.receiver a senha. Valida a senha e se for inválida 
     //          desconecta o cliente e volta a ouvir o stream tcp/ip.    
     for password in receiver.iter() {
-        if password == config::get_password() {
+        if password == servermod::config::get_password() {
             println!("Senha correta");
             break;
         } else {
@@ -105,7 +97,7 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
 
     let u16client_id = client_id.parse::<u16>().unwrap();
     
-    match clientdata::find_client_by_id(u16client_id) {
+    match servermod::clientdata::find_client_by_id(u16client_id) {
         Some(client) => {
             println!("Server: Client found: {:?} disconecting", client);
             stream.shutdown(std::net::Shutdown::Both).unwrap();
@@ -116,7 +108,7 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
             let client_ip = ip.to_string();
             let client_port = port.to_string();    
 
-            let client1 = clientdata::ClientData {
+            let client1 = servermod::clientdata::ClientData {
                 id: u16client_id,
                 ip: client_ip,
                 status: "active".to_string(),
@@ -124,7 +116,7 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
                 cid: client_id.to_string(),
             };
             log::info!("Server: Saving client data: {:?}", client1);
-            clientdata::save_client(client1);
+            servermod::clientdata::save_client(client1);
         }
     }
     

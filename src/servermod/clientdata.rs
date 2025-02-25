@@ -2,6 +2,8 @@ use lazy_static::lazy_static;
 use std::sync::Mutex;
 use std::collections::HashMap;
 
+use crate::client;
+
 #[derive(Debug, Clone)]
 pub struct ClientData {
     pub id: u16,
@@ -48,10 +50,26 @@ pub fn update_cid_by_id(id: u16, new_cid: String) -> bool {
 pub fn list_all_clients() {
     let clients = CLIENTS.lock().unwrap();
     let all_clients: Vec<ClientData>  = clients.values().cloned().collect();
-
+    if clients.is_empty() {
+        log::info!("No clients connected.");
+    }
     for client in all_clients {
         println!("Client: {:?}", client);
     } 
+}
+pub fn list_all_clients2()->String {
+    let clients = CLIENTS.lock().unwrap();
+    let all_clients: Vec<ClientData>  = clients.values().cloned().collect();
+    let mut result = String::from("Connected clients:\n");
+    if clients.is_empty() {
+        log::info!("No clients connected.");
+        result = String::from("Connected clients: No clients connected.\n");
+    }
+
+    for client in clients.iter() {        
+        result.push_str(&format!("ID: {}, IP: {}, Status: {} Port2: {} cid {}\n", client.1.id, client.1.ip, client.1.status, client.1.port, client.1.cid));
+    }
+    result
 }
 
 fn _testemain() {
