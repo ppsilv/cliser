@@ -79,4 +79,15 @@ Os comandos são sempre enviados pelo servidor o cliente somente responde.
 120: qual o ID
 130: shutdown sys
 140: Connected
+999: shutdown
+</pre>
+
+<pre>
+Comandos recebidos pela backdoor
+200: Envia keep alive
+201: Thread ger_client recebe como exit e 
+     da um return porém nada acontece o 
+     sistema esta noar normalmente 
+     TODO: analizar.
+
 </pre>

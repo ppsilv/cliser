@@ -3,6 +3,7 @@ use syslog::{Facility, BasicLogger, Formatter3164};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::net::{TcpStream, Shutdown};
+use std::process;
 //use serde::Deserialize;
 mod configcli;
 
@@ -93,12 +94,16 @@ pub fn main() -> io::Result<()> {
         //TODO: 🌞 Put a timeout if sever does not send a message in time, shutdown client.
         let n = stream.read(&mut buffer)?;
         let response = String::from_utf8_lossy(&buffer[..n]);
+        log::info!("Client:{} msg {}",configcli::get_clientid(  ),response);
         unsafe{
             if CTRL_SIGNAL == 255 {
                 stream.shutdown(Shutdown::Both).unwrap();
-                log::info!("Client: Finishing the client Id: {}",configcli::get_clientid(  ));
-                break
+                log::info!("Client: Finishing the client Id: {}",configcli::get_clientid(  )); 
             }
+        }
+        if response.contains("999:") {
+            log::info!("Client:{} msg {}",configcli::get_clientid(  ),response);
+            process::exit(0);
         }
         if response.contains("100:") {
             log::info!("Client:{} msg {}",configcli::get_clientid(  ),response);
@@ -109,5 +114,5 @@ pub fn main() -> io::Result<()> {
             log::info!("Client: id sent.");            
         }
     }    
-    Ok(())
+    //Ok(())
 }
