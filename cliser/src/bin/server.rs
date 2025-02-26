@@ -1,13 +1,15 @@
-use std::sync::mpsc;
+use std::sync::mpsc::{self};
 use std::thread;
 use std::net::{TcpStream, TcpListener};
 use std::io::{Read, Write};
 use std::time::Duration;
-//use std::env;
 use syslog::{Facility, Formatter3164, BasicLogger};
 use std::process;
 mod configser;
+
 mod clientdata;
+
+
 // Define the server function in the server module
 pub fn conection_manager() {
     log::info!("Server: Server running...");
@@ -41,7 +43,7 @@ pub fn conection_manager() {
         let (sender_tcp_reader, receiver_from_tcp_reader) = mpsc::channel();
         let (sender_to_tcp_writer, receiver_tcp_writer) = mpsc::channel();
 
-        
+
         // Spawn a thread to read from the TCP stream
         thread::spawn(move || {
             tcp_reader(stream, sender_tcp_reader);
@@ -55,7 +57,7 @@ pub fn conection_manager() {
         let (sender_to_ger_client, receiver_from_backdoor) = mpsc::channel();
         // Spawn a thread to read from the TCP stream
         thread::spawn(move || {
-            ger_client(stream_clone_ger_msg,sender_to_tcp_writer, receiver_from_tcp_reader, receiver_from_backdoor);
+            auth_manager(stream_clone_ger_msg,sender_to_tcp_writer, receiver_from_tcp_reader, receiver_from_backdoor);
         });
 
         thread::spawn(move || {
@@ -64,7 +66,7 @@ pub fn conection_manager() {
     }
 }
 
-fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mpsc::Receiver<String>, receiver_from_backdoor: mpsc::Receiver<String>) {
+fn auth_manager(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mpsc::Receiver<String>, receiver_from_backdoor: mpsc::Receiver<String>) {
     //1.1.3.1 - Envia para a  msgqueue tcp_writer.receiver um comando para pedir a senha para o cliente.
     let msg: String = "110: qual a senha".to_string();
     sender.send(msg).unwrap();
@@ -101,9 +103,17 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
         return; // Or handle the error appropriately
     };
 
-    let u16client_id = client_id.parse::<u16>().unwrap();
+    let u16client_id = match client_id.parse::<u16>() {
+        Ok(id) => id,
+        Err(_) => {
+            eprintln!("Invalid client ID format");
+            stream.write_all("Invalid client ID format".as_bytes()).unwrap();
+            stream.shutdown(std::net::Shutdown::Both).unwrap();
+            return;
+        }
+    };
     
-    match clientdata::find_client_by_id(u16client_id) {
+    match clientdata::ClientData::find_client_by_id(u16client_id) {
         Some(client) => {
             println!("Server: Client found: {:?} disconecting", client);
             stream.shutdown(std::net::Shutdown::Both).unwrap();
@@ -112,17 +122,20 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
         None => {
             // Now you can safely mutate `client_ip` and `client_port`
             let client_ip = ip.to_string();
-            let client_port = port.to_string();    
+            let client_port = port.to_string();  
 
-            let client1 = clientdata::ClientData {
-                id: u16client_id,
-                ip: client_ip,
-                status: "active".to_string(),
-                port: client_port,
-                cid: client_id.to_string(),
-            };
-            log::info!("ger_client:  Saving client data: {:?}", client1);
-            clientdata::save_client(client1);
+            let (_sender_tcp_reader,  _receiver_tcp_reader): (mpsc::Sender<String>, mpsc::Receiver<String>) = mpsc::channel();
+
+            let client_data = clientdata::ClientData {
+                    id: u16client_id,
+                    ip: client_ip,
+                    status: "active".to_string(),
+                    port: client_port,
+                    cid: client_id.to_string(),
+                    sender_tcp_writer: sender.clone(),
+            };            
+            log::info!("ger_client:  Saving client data: {:?}", client_data);
+            clientdata::ClientData::save(client_data);
         }
     }
     //🌞
@@ -137,7 +150,8 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
             timerovrflow = timeout + elapsed.as_millis();
             log::info!("ger_client:  Timeout, closing connection");
             let keep_alive: String = "100: keep alive".to_string();
-            sender.send(keep_alive).unwrap();
+            //sender.send(keep_alive).unwrap();
+            clientdata::ClientData::round_robin(keep_alive);
         }else{
             let keep_alive: String = "1".to_string();
             sender.send(keep_alive).unwrap();
@@ -166,7 +180,6 @@ fn ger_client(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: mps
                     sender.send(shutdown).unwrap();
                     thread::sleep(Duration::from_millis(5000));
                     process::exit(0);
-                    return;
                 }      
                 if message == "200:" {
                     let keep_alive: String = "100: keep alive".to_string();
@@ -210,7 +223,20 @@ fn tcp_writer(mut stream: TcpStream, receiver: mpsc::Receiver<String>) {
         stream.write_all(received_data.as_bytes()).unwrap();
     }
 }
+fn _print_clients(){
+    let clients = clientdata::ClientData::list_clients();
 
+    // Itera sobre a lista de clientes
+    for client in clients {
+        println!("-----------------------------");
+        println!("Client ID: {}", client.id);
+        println!("Client IP: {}", client.ip);
+        println!("Client Status: {}", client.status);
+        println!("Client Port: {}", client.port);
+        println!("Client CID: {}", client.cid);
+        println!("-----------------------------");
+    }    
+}
 fn main() {
    // let args: Vec<String> = env::args().collect();
 
@@ -229,7 +255,7 @@ fn main() {
         .map(|()| log::set_max_level(log::LevelFilter::Info))
         .expect("could not set logger");
 
-    println!("path: {:?}",configser::print_path()) ;   
+   // println!("path: {:?}",configser::print_path()) ;   
 
     thread::spawn(move || {
         conection_manager();
@@ -237,18 +263,12 @@ fn main() {
     loop{
         thread::sleep(Duration::from_millis(500000));
         /*
-        let ip_port: String = configser::get_hostip() + ":" + &configser::get_port3();
-        println!("Listening on {}...", ip_port);
-
-        let listener = TcpListener::bind(ip_port).unwrap();
-
-        // Accept a TCP connection
-        let (stream, _) = listener.accept().unwrap();
-
-        thread::spawn(move || {
-            handle_backdoor_client_port3(stream );
-        });
+            Aqui eu vou por o código que busca a informação de se tem energia ou não.
+            Caso a energia esteja desligada, eu vou mandar uma mensagem para todos os clientes
+            para que eles se desliguem.
         */
+        clientdata::ClientData::round_robin( "100: keep alive".to_string());
+
     }
 }
 
@@ -296,8 +316,12 @@ fn handle_backdoor_client_port3(sender_to_ger_client:  mpsc::Sender<String>) {
                     continue;
                 }// Handle the LISTAR command
                 if received_data.trim() == "L" || received_data.trim() == "l" {
-                        let clientes: String = clientdata::list_all_clients2();                   
-                    stream.write(clientes.as_bytes()).unwrap();
+                    let clients = clientdata::ClientData::list_clients();   
+                    for client in clients {
+                        let one_client = format!("Client ID: {}\nClient IP: {}\nClient Status: {}\nClient Port: {}\nClient CID: {}\n---\n", client.id, client.ip, client.status, client.port, client.cid);
+                        stream.write(one_client.as_bytes()).unwrap();
+                    }                                 
+                    
                     continue;
                 }else if received_data.trim() == "E" || received_data.trim() == "E" {
                     log::info!("Backdoor: E cmd exiting...");               
