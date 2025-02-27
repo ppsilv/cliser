@@ -154,7 +154,7 @@ fn auth_manager(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: m
             clientdata::ClientData::round_robin(keep_alive);
         }else{
             let keep_alive: String = "1".to_string();
-            sender.send(keep_alive).unwrap();
+            //sender.send(keep_alive).unwrap();
         }
         
         match receiver.recv_timeout(Duration::from_millis(500)) {
@@ -253,6 +253,7 @@ use std::io::{self};
 use std::time::Instant;
 
 fn handle_backdoor_client_port3() {
+loop{
     let ip_port: String = configser::get_hostip() + ":" + &configser::get_port3();
     println!("Listening on {}...", ip_port);
 
@@ -264,124 +265,30 @@ fn handle_backdoor_client_port3() {
 
     log::info!("Backdoor port connected: {}", stream.peer_addr().unwrap());
 
-   // Define um timeout de 5 segundos
-   let timeout1 = Duration::from_secs(5);
+    // Define um timeout de 5 segundos
+    let timeout1 = Duration::from_secs(5);
 
-   let mut buffer = [0; 1024]; // Buffer para armazenar os dados lidos
-   let start_time = Instant::now(); // Marca o início do timeout
+    let mut buffer = [0; 1024]; // Buffer para armazenar os dados lidos
+    let start_time = Instant::now(); // Marca o início do timeout
 
-   // Configura o stream para modo não bloqueante
-   stream.set_nonblocking(true).unwrap();
+    // Configura o stream para modo não bloqueante
+    stream.set_nonblocking(true).unwrap();
 
-   let timeout: u128 = 10000;
-   let start = std::time::Instant::now();
-   let elapsed = start.elapsed();
-   let mut timerovrflow: u128= timeout + elapsed.as_millis();
-
-   loop {
-       // Tenta ler dados do stream
-        match stream.read(&mut buffer) {
-           Ok(0) => {
-               // Fim da leitura (conexão fechada pelo outro lado)
-               break;
-           }
-           Ok(n) => {
-               // Adiciona os dados lidos ao vetor de resultado
-               let received_data = String::from_utf8_lossy(&buffer[..n]);
-               let mut cmdtotcp: &str = "";
-               if let Some(cmdtotcp1) = received_data.get(0..4) {
-                   println!("Backdoor: cmdtotcp {}", cmdtotcp); // Output: "Hello"
-                   cmdtotcp = cmdtotcp1;
-               } else {
-                   log::info!("Backdoor: No command to tcp/ip");
-               }                
-               
-               if received_data.trim() == "200:" {
-                   //sender_to_ger_client.send(cmdtotcp.to_string()).unwrap();
-                   continue;
-               }
-               if received_data.trim() == "201:" {
-                   let shutdown: String = "999: shutdown".to_string();
-                   clientdata::ClientData::round_robin(shutdown);
-                   thread::sleep(Duration::from_millis(5000));
-                   //process::exit(0);
-                   continue;
-               }// Handle the LISTAR command
-               if received_data.trim() == "L" || received_data.trim() == "l" {
-                   let clients = clientdata::ClientData::list_clients();   
-                   for client in clients {
-                       let one_client = format!("Client ID: {}\nClient IP: {}\nClient Status: {}\nClient Port: {}\nClient CID: {}\n---\n", client.id, client.ip, client.status, client.port, client.cid);
-                       stream.write(one_client.as_bytes()).unwrap();
-                   }                                 
-               }else if received_data.trim() == "E" || received_data.trim() == "E" {
-                   log::info!("Backdoor: E cmd exiting...");               
-                   break
-               }else{                
-                   stream.write("Invalid command\n".as_bytes()).unwrap();
-               }               
-           }
-           Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
-               // Não há dados disponíveis no momento
-               if start_time.elapsed() >= timeout1 {
-                   // Timeout atingido
-                   log::error!("Read timed out");
-                   break;
-               }
-               // Espera um pouco antes de tentar novamente
-               std::thread::sleep(Duration::from_millis(100));
-           }
-               Err(e) => {
-               // Outro erro ocorreu
-               log::error!("Read error: {}", e);
-               break;
-           }
-        }
-        if elapsed.as_millis() > timerovrflow {
-            timerovrflow = timeout + elapsed.as_millis();
-            log::info!("ger_client:  Timeout, closing connection");
-            let keep_alive: String = "100: keep alive".to_string();
-            clientdata::ClientData::round_robin(keep_alive);
-        }else{
-            let keep_alive: String = "1".to_string();
-            clientdata::ClientData::round_robin(keep_alive);
-        }
-    }
-}
-
-
-
-fn handle_backdoor_client_port2(sender_to_ger_client:  mpsc::Sender<String>) {
-    let mut buffer = [0; 512];
-    let ip_port: String = configser::get_hostip() + ":" + &configser::get_port3();
-    println!("Listening on {}...", ip_port);
-
-    let listener = TcpListener::bind(ip_port).unwrap();
-
-    // Accept a TCP connection
-    let (mut stream, _) = listener.accept().unwrap();
-
-
-    log::info!("Backdoor port connected: {}", stream.peer_addr().unwrap());
-
-    let timeout: u128 = 10000;
+    let timeout: u128 = 1000;
     let start = std::time::Instant::now();
     let elapsed = start.elapsed();
     let mut timerovrflow: u128= timeout + elapsed.as_millis();
 
-
     loop {
-        // Read data from the client
-        stream.write("#>".as_bytes()).unwrap();
-        match stream.read(&mut buffer) {
+        // Tenta ler dados do stream
+            match stream.read(&mut buffer) {
             Ok(0) => {
-                // Client disconnected
-                log::error!("Client backdoor disconnected .");
-            break;
+                // Fim da leitura (conexão fechada pelo outro lado)
+                break;
             }
             Ok(n) => {
-                // Echo the data back to the client
+                // Adiciona os dados lidos ao vetor de resultado
                 let received_data = String::from_utf8_lossy(&buffer[..n]);
-                log::info!("Backdoor: Received: {}", received_data);
                 let mut cmdtotcp: &str = "";
                 if let Some(cmdtotcp1) = received_data.get(0..4) {
                     println!("Backdoor: cmdtotcp {}", cmdtotcp); // Output: "Hello"
@@ -391,7 +298,7 @@ fn handle_backdoor_client_port2(sender_to_ger_client:  mpsc::Sender<String>) {
                 }                
                 
                 if received_data.trim() == "200:" {
-                    sender_to_ger_client.send(cmdtotcp.to_string()).unwrap();
+                    //sender_to_ger_client.send(cmdtotcp.to_string()).unwrap();
                     continue;
                 }
                 if received_data.trim() == "201:" {
@@ -407,31 +314,39 @@ fn handle_backdoor_client_port2(sender_to_ger_client:  mpsc::Sender<String>) {
                         let one_client = format!("Client ID: {}\nClient IP: {}\nClient Status: {}\nClient Port: {}\nClient CID: {}\n---\n", client.id, client.ip, client.status, client.port, client.cid);
                         stream.write(one_client.as_bytes()).unwrap();
                     }                                 
-                    
-                    continue;
                 }else if received_data.trim() == "E" || received_data.trim() == "E" {
                     log::info!("Backdoor: E cmd exiting...");               
                     break
-                }else{
+                }else{                
                     stream.write("Invalid command\n".as_bytes()).unwrap();
-                    continue;
-                }         
+                }               
             }
-            Err(e) => {
-                log::error!("Backdoor: Failed to read from client: {}", e);
+            Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
+                // Não há dados disponíveis no momento
+                if start_time.elapsed() >= timeout1 {
+                    // Timeout atingido
+                    log::error!("Read timed out");
+                    //break; //nao quero sair do loop
+                }
+                // Espera um pouco antes de tentar novamente
+                //std::thread::sleep(Duration::from_millis(100));
+            }
+                Err(e) => {
+                // Outro erro ocorreu
+                log::error!("Read error: {}", e);
                 break;
             }
-        }
-        if elapsed.as_millis() > timerovrflow {
-            timerovrflow = timeout + elapsed.as_millis();
-            log::info!("ger_client:  Timeout, closing connection");
-            let keep_alive: String = "100: keep alive".to_string();
-            //sender.send(keep_alive).unwrap();
-            clientdata::ClientData::round_robin(keep_alive);
-        }else{
-            let keep_alive: String = "1".to_string();
-            //sender.send(keep_alive).unwrap();
+            }
+            if elapsed.as_millis() > timerovrflow {
+                timerovrflow = timeout + elapsed.as_millis();
+                log::info!("ger_client:  Timeout, closing connection");
+                let keep_alive: String = "100: keep alive".to_string();
+                clientdata::ClientData::round_robin(keep_alive);
+            }else{
+                let keep_alive: String = "1".to_string();
+                //clientdata::ClientData::round_robin(keep_alive);
+            }
         }
     }
-    println!("client backdoor desconecting...");
 }
+
