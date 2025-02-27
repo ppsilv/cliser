@@ -91,3 +91,18 @@ Comandos recebidos pela backdoor
          comando de desconexão para o cliente.
          Formato cmd:client id
 </pre>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#raspberry#ds1820#rust#server#client#tcp#tcpip#tcp/ip#connection

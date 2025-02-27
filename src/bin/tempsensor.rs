@@ -1,4 +1,14 @@
 /*
+To read a DS18B20 temperature sensor from a Raspberry Pi 4 using Rust, you need to access 
+the underlying Linux system's One-Wire interface through the /sys/bus/w1/devices directory, 
+read the sensor's unique device ID, and then read the temperature data from the corresponding 
+file within that directory using the std::fs module in Rust. 
+Key steps:
+
+    Hardware Setup:
+        Connect the DS18B20 sensor to a GPIO pin on the Raspberry Pi, ensuring you have a 
+        4.7kΩ pull-up resistor between the data pin and the 3.3V power supply.
+        Enable the One-Wire kernel module on your Raspberry Pi. 
 
 Explanation:
 
@@ -49,7 +59,7 @@ fn read_temperature(sensor_id: &str) -> Result<f32, Error> {
 }
 
 fn main() -> Result<(), Error> {
-    let sensor_id = match get_sensor_id() {
+    let _sensor_id = match get_sensor_id() {
         Ok(sensor_id) => {
             println!("Sensor ID: {}", sensor_id);
             let temperature = read_temperature(&sensor_id)?;
