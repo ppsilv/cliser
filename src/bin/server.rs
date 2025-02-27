@@ -8,7 +8,7 @@ use std::process;
 mod configser;
 
 mod clientdata;
-
+//😊😊😊😊😊😊
 
 // Define the server function in the server module
 pub fn conection_manager() {
@@ -146,19 +146,23 @@ fn auth_manager(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: m
     let elapsed = start.elapsed();
     let mut timerovrflow: u128= timeout + elapsed.as_millis();
     loop{
+        let elapsed = start.elapsed(); // Update elapsed time inside the loop
+        //println!("ger_client:  Verificando se timer over flow...{} timerovrflow: {}",elapsed.as_millis(),timerovrflow);
         if elapsed.as_millis() > timerovrflow {
             timerovrflow = timeout + elapsed.as_millis();
             log::info!("ger_client:  Timeout, closing connection");
             let keep_alive: String = "100: keep alive".to_string();
-            //sender.send(keep_alive).unwrap();
             clientdata::ClientData::round_robin(keep_alive);
         }else{
             let keep_alive: String = "1".to_string();
-            //sender.send(keep_alive).unwrap();
+            //clientdata::ClientData::round_robin(keep_alive);
+            //or
+            //clientdata::ClientData::send_client_msg_by_id(u16client_id,keep_alive);
         }
-        
+        //println!("ger_client:  Waiting for message from client...");
         match receiver.recv_timeout(Duration::from_millis(500)) {
             Ok(message) => {
+                //TODO: Filtrar qual mensagem chegou, nesse momento só temos a mensagem de desligar o cliente.
                 log::info!("ger_client:  Received message: {} for u16client_id [{}]", message, u16client_id);
                 //clientdata::ClientData::update_status(u16client_id, "inactive".to_string());
                 if clientdata::ClientData::delete_client_by_id(u16client_id) {

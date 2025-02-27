@@ -1,12 +1,14 @@
 ## cliser A client/server application to learn Rust
 <pre>
-┌───────────────────┐
-│   tcp_reader      │
-│                   │
-│                   │
-│                   │
-│                   │
-│                   │
+┌───────────────────┐              ┌───────────────┐
+│   tcp_reader      │              |  Backdoor     │
+│                   │              │               │
+│                   │              │               │
+│                   │              └───────────────┘
+│                   │                 |     |
+│                   │                 |     |
+│                   │                 |     |
+│                   │                 |     |
 │                   │              ┌───────────────┐
 │                   │─────────────>│    Manager    │
 │                   │<─────────────│               │
@@ -35,7 +37,7 @@ Quando algum cliente se conecta ao servidor a seguinte sequência acontece:
 
 1.1 - Aceita a conexão:
 
-1.1.0 - Cria os mailbox para conversar com as threads tcp writer e reader
+1.1.0 - Cria os mailbox para conversar com as threads handle_backdoor,tcp writer e reader
 
 1.1.0.1 - Cria sender,receiver para falar com a tcp_writer
 
@@ -45,31 +47,36 @@ Quando algum cliente se conecta ao servidor a seguinte sequência acontece:
 
 1.1.2 - Cria a thread tcp_reader, passando o stream do tcp e a msgqueue tcp.reader.sender
 
-1.1.3 - Cria a thread ger_msg
+1.1.3 - Cria a thread auth_manager
 
-1.1.3.1 - Envia para a  msgqueue tcp_writer.receiver um comando para pedir a senha para o cliente.
+1.1.3.1 - Envia para a  msgqueue tcp_writer.receiver uma mensagem,110, para pedir a senha para o cliente.
 
-1.1.3.2 - Aguarda na msgqueue tcp_reader.receiver a senha. Valida a senha e se for inválida desconecta 
-          o cliente e volta a ouvir o stream tcp/ip.
+1.1.3.2 - Aguarda a resposta, a senha, na msgqueue tcp_reader.receiver a senha. Valida a senha e   se for inválida desconecta o cliente e volta a ouvir o stream tcp/ip.
 
-1.1.3.3 - Envia para a thread_writer via msgqueue um comando para pedir o Id do cliente.
+1.1.3.3 - Enviao uma mensagem,120, para pedir o Id do cliente, para a thread_writer via msgqueue.
 
-1.1.3.4 - Aguarda na msgqueue tcp_reader.receiver o ID do cliente
+1.1.3.4 - Aguarda a resposta,o ID  do cliente, na msgqueue tcp_reader.receiver.
+1.1.3.4.1 - Verifica se o cliente já exites no sistema.
+            se o cliente existir envia mensagem de desconecção e termina a thread.
 
-1.1.3.5 - Extrai da conexão tcp/ip o IP e Porta do cliente
+1.1.3.5 - Extrai da stream conexão tcp/ip o IP e Porta do cliente
 
 1.1.3.6 - Cadastra o cliente. na estrutura
 
-      clientedata{
-        sid: u16,
-        cid: String,
-        cip: String,
-        cport: String,
-        cstatus: bool, //true = conectado false = desconectado
-      }
+pub struct ClientData {
+    pub id: u16,
+    pub ip: String,
+    pub status: String, // "active" or "inactive"
+    pub port: String, // Porta do cliente
+    pub cid: String, // ID do cliente
+    pub sender_tcp_writer: mpsc::Sender<String>, // Sender para enviar mensagens ao cliente
+}
 
-1.1.3.7 - Envia para a thread_writer via msgqueue um aviso de cliente conectado.
+1.1.3.7 - Envia para a thread_writer via msgqueue uma mensagem,140, de cliente conectado.
 
+1.2 - Entra no loop principal, e fica tratando as mensagems que entram e que saem.
+      * Envia um keep_alive a cada 10 segundos.
+      
 Formação dos comandos: código: descrição
 
 Os comandos são sempre enviados pelo servidor o cliente somente responde.
