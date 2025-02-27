@@ -150,7 +150,7 @@ fn auth_manager(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: m
         //println!("ger_client:  Verificando se timer over flow...{} timerovrflow: {}",elapsed.as_millis(),timerovrflow);
         if elapsed.as_millis() > timerovrflow {
             timerovrflow = timeout + elapsed.as_millis();
-            log::info!("ger_client:  Timeout, closing connection");
+            //log::info!("ger_client:  Timeout, closing connection");
             let keep_alive: String = "100: keep alive".to_string();
             clientdata::ClientData::round_robin(keep_alive);
         }else{
