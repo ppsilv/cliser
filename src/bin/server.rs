@@ -159,7 +159,13 @@ fn auth_manager(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: m
         
         match receiver.recv_timeout(Duration::from_millis(500)) {
             Ok(message) => {
-                log::info!("ger_client:  Received message: {}", message);
+                log::info!("ger_client:  Received message: {} for u16client_id [{}]", message, u16client_id);
+                //clientdata::ClientData::update_status(u16client_id, "inactive".to_string());
+                if clientdata::ClientData::delete_client_by_id(u16client_id) {
+                    log::info!("ger_client:  Client deleted: {}", u16client_id);
+                }else{
+                    log::info!("ger_client:  Client not deleted: {}", u16client_id);
+                }
                 if message.contains("999:") {
                     log::info!("ger_client:  Thread exiting");
                     break;

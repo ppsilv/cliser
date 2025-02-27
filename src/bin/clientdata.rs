@@ -1,4 +1,4 @@
-use std::sync::mpsc;
+use std::sync::{mpsc, MutexGuard};
 use std::sync::{Arc, Mutex};
 use lazy_static::lazy_static;
 use std::collections::HashMap;
@@ -27,7 +27,12 @@ impl ClientData {
         let mut clients = CLIENTS.lock().unwrap();
         clients.insert(client.id, Arc::new(Mutex::new(client)));
     }
-
+/*
+    Ao invéz de usar o status para usar um cadastro ja existente para cadastrar
+    um novo cliente eu preferi deletar o registro antigo e criar um novo registro.
+    Se algum dia precisar de um histórico de clientes, eu posso criar um campo
+    para armazenar o histórico de clientes.
+    Se precisar do status eu reativo essa função.
     // Atualiza o status de um cliente por ID
     pub fn update_status(id: u16, new_status: String) {
         let clients = CLIENTS.lock().unwrap();
@@ -36,8 +41,8 @@ impl ClientData {
             client.status = new_status;
         }
     }
+*/
     // Lê o ID de um cliente por ID
-
     pub fn read_id(id: u16) -> Option<u16> {
         let clients = CLIENTS.lock().unwrap();
         clients.get(&id).map(|client| client.lock().unwrap().id)
@@ -124,4 +129,10 @@ impl ClientData {
         }
         results
     }
+
+    pub fn delete_client_by_id( id: u16) -> bool {
+        let mut clients = CLIENTS.lock().unwrap();
+//        clients: &mut HashMap<u16, ClientData>,
+        clients.remove(&id).is_some() // Retorna true se o cliente foi deletado
+    }    
 }
