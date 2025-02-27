@@ -132,7 +132,6 @@ impl ClientData {
 
     pub fn delete_client_by_id( id: u16) -> bool {
         let mut clients = CLIENTS.lock().unwrap();
-//        clients: &mut HashMap<u16, ClientData>,
         clients.remove(&id).is_some() // Retorna true se o cliente foi deletado
     }    
 }

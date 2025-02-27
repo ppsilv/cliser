@@ -85,9 +85,9 @@ Os comandos são sempre enviados pelo servidor o cliente somente responde.
 <pre>
 Comandos recebidos pela backdoor
 200: Envia keep alive
-201: Thread ger_client recebe como exit e 
-     da um return porém nada acontece o 
-     sistema esta noar normalmente 
-     TODO: analizar.
-
+201: Comando para backdoor enviar comando de
+     desconexao para todos os clientes
+202:1000 Comando para backdoor enviaw um 
+         comando de desconexão para o cliente.
+         Formato cmd:client id
 </pre>
