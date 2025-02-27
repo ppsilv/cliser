@@ -103,6 +103,7 @@ pub fn main() -> io::Result<()> {
         }
         if response.contains("999:") {
             log::info!("Client:{} msg {}",configcli::get_clientid(  ),response);
+            stream.shutdown(Shutdown::Both).unwrap();
             process::exit(0);
         }
         if response.contains("100:") {

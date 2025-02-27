@@ -94,6 +94,14 @@ impl ClientData {
             }
         })
     }
+    pub fn send_client_msg_by_id(id: u16, message: String) {
+        let clients = CLIENTS.lock().unwrap();
+        clients.get(&id).map(|client| {
+            let client = client.lock().unwrap();
+            let result = client.sender_tcp_writer.send(message.clone())
+                .map_err(|e| format!("Failed to send message to client {}: {}", client.id, e));
+        });
+    }
 
     // Lê o sender_tcp_writer por ID
     pub fn read_sender_tcp_writer(id: u16) -> Option<mpsc::Sender<String>> {
@@ -114,7 +122,6 @@ impl ClientData {
                 .map_err(|e| format!("Failed to send message to client {}: {}", client.id, e));
             results.push(result);
         }
-
         results
     }
 }

