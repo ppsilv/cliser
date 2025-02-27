@@ -94,7 +94,7 @@ pub fn main() -> io::Result<()> {
         //TODO: 🌞 Put a timeout if sever does not send a message in time, shutdown client.
         let n = stream.read(&mut buffer)?;
         let response = String::from_utf8_lossy(&buffer[..n]);
-        log::info!("Client:{} msg {}",configcli::get_clientid(  ),response);
+        //log::info!("Client:{} msg {}",configcli::get_clientid(  ),response);
         unsafe{
             if CTRL_SIGNAL == 255 {
                 stream.shutdown(Shutdown::Both).unwrap();
