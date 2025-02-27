@@ -76,7 +76,7 @@ pub struct ClientData {
 
 1.2 - Entra no loop principal, e fica tratando as mensagems que entram e que saem.
       * Envia um keep_alive a cada 10 segundos.
-      
+
 Formação dos comandos: código: descrição
 
 Os comandos são sempre enviados pelo servidor o cliente somente responde.
@@ -112,4 +112,5 @@ Comandos recebidos pela backdoor
 
 
 
-#raspberry#ds1820#rust#server#client#tcp#tcpip#tcp/ip#connection
+#raspberry#ds1820#rust#server#client#tcp#tcpip#tcp/ip#connection#raspberrypi #python #raspberrypi5
+#python #vscode #raspberrypi5 #linuxubuntu #ubuntu #raspberrypi5 #raspberrypi #machinelearning #robotics #iot #edgecomputing #edge #aleksandarhaber #arduino #arduinoIDE #iot

