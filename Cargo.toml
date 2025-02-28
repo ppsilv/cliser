@@ -15,7 +15,6 @@ path = "src/bin/server.rs"
 
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
 syslog = "7.0.0"
 log = "0.4"
 libc = "0.2"
@@ -23,3 +22,8 @@ hostname = "0.4"
 ctrlc = "3.4"
 lazy_static = "1.4"
 rppal = "0.22.1"
+reqwest = { version = "0.11", features = ["blocking"] }
+serde_json = "1.0"
+csv = "1.1"
+chrono = "0.4"
+

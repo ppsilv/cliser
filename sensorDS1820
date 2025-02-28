@@ -1,0 +1,145 @@
+It looks like your `/sys/bus/w1/devices/` directory contains symbolic links to devices, but none of them match the expected pattern for a DS18B20 temperature sensor (which typically starts with `28-`). This suggests that either:
+
+1. The DS18B20 sensor is not being detected by the Raspberry Pi.
+2. The sensor is not properly connected or configured.
+
+Let’s troubleshoot and resolve this step by step.
+
+---
+
+### **1. Verify Sensor Wiring**
+Ensure the DS18B20 sensor is wired correctly to the Raspberry Pi:
+
+- **VCC**: Connect to 3.3V (Pin 1 on GPIO header).
+- **GND**: Connect to Ground (Pin 6 on GPIO header).
+- **Data**: Connect to GPIO4 (Pin 7 on GPIO header) with a **4.7kΩ pull-up resistor** between the Data pin and 3.3V.
+
+---
+
+### **2. Verify 1-Wire Interface is Enabled**
+The 1-Wire interface must be enabled for the DS18B20 sensor to be detected.
+
+1. **Enable 1-Wire in `raspi-config`**:
+   - Run the following command to open the Raspberry Pi configuration tool:
+     ```bash
+     sudo raspi-config
+     ```
+   - Navigate to **Interfacing Options** → **1-Wire** and enable it.
+   - Reboot the Raspberry Pi:
+     ```bash
+     sudo reboot
+     ```
+
+2. **Verify 1-Wire Kernel Modules**:
+   - After rebooting, check if the `w1_gpio` and `w1_therm` kernel modules are loaded:
+     ```bash
+     lsmod | grep w1
+     ```
+   - You should see output like this:
+     ```
+     w1_therm               20480  0
+     w1_gpio                16384  0
+     wire                   36864  2 w1_gpio,w1_therm
+     ```
+
+---
+
+### **3. Check for Sensor Detection**
+After enabling 1-Wire and verifying the wiring, check if the DS18B20 sensor is detected:
+
+1. **List Devices in `/sys/bus/w1/devices/`**:
+   - Run the following command:
+     ```bash
+     ls /sys/bus/w1/devices/
+     ```
+   - If the DS18B20 sensor is detected, you should see a directory with a name starting with `28-` (e.g., `28-00000xxxxxxx`).
+
+2. **If the Sensor is Not Detected**:
+   - Double-check the wiring, especially the pull-up resistor.
+   - Ensure the sensor is powered correctly (3.3V, not 5V).
+   - Try a different DS18B20 sensor if possible, as the sensor itself might be faulty.
+
+---
+
+### **4. Update Rust Code to Handle Current Devices**
+Since your `/sys/bus/w1/devices/` directory contains devices with prefixes like `00-`, you can update your Rust code to handle these devices. However, note that these devices are not DS18B20 sensors (which use the `28-` prefix).
+
+If you want to check for other types of 1-Wire devices, you can modify the `get_sensor_id` function to list all devices:
+
+```rust
+use std::fs;
+use std::io::Error;
+
+pub fn get_sensor_id() -> Result<String, Error> {
+    let dir = "/sys/bus/w1/devices";
+    for entry in fs::read_dir(dir)? {
+        let entry = entry?;
+        let path = entry.path();
+        if path.is_dir() {
+            let device_id = path.file_name().unwrap().to_str().unwrap();
+            println!("Found device: {}", device_id);
+        }
+    }
+    Err(Error::new(std::io::ErrorKind::NotFound, "No DS18B20 sensor found"))
+}
+
+fn main() -> Result<(), Error> {
+    match get_sensor_id() {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            eprintln!("Error: {}", e);
+            Err(e)
+        },
+    }
+}
+```
+
+This will list all devices in `/sys/bus/w1/devices/`, but it won’t find a DS18B20 sensor unless one is connected and detected.
+
+---
+
+### **5. Debugging Steps**
+1. **Check Kernel Logs**:
+   - Look for 1-Wire-related messages in the kernel logs:
+     ```bash
+     dmesg | grep w1
+     ```
+   - This might provide clues about why the DS18B20 sensor is not being detected.
+
+2. **Test with Python Script**:
+   - Use a Python script to verify if the sensor is detected:
+     ```python
+     import os
+     import glob
+
+     base_dir = '/sys/bus/w1/devices/'
+     device_folders = glob.glob(base_dir + '28*')
+
+     if not device_folders:
+         print("No DS18B20 sensor found.")
+     else:
+         for device_folder in device_folders:
+             print(f"Found DS18B20 sensor: {device_folder}")
+     ```
+
+3. **Check Power Supply**:
+   - Ensure the DS18B20 sensor is receiving adequate power. A weak power supply can cause detection issues.
+
+---
+
+### **6. Common Issues**
+- **Incorrect Wiring**:
+  - Double-check the connections, especially the pull-up resistor.
+- **Faulty Sensor**:
+  - Try a different DS18B20 sensor.
+- **1-Wire Not Enabled**:
+  - Ensure the 1-Wire interface is enabled in `raspi-config`.
+
+---
+
+### **Summary**
+- Verify the wiring and power supply for the DS18B20 sensor.
+- Enable the 1-Wire interface and check if the sensor is detected.
+- Update your Rust code to handle the current devices in `/sys/bus/w1/devices/`.
+
+If the DS18B20 sensor is still not detected, let me know, and we can dive deeper into debugging! 😊
