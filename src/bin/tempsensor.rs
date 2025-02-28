@@ -1,26 +1,27 @@
 use std::fs;
 use std::io::Error;
-use reqwest::blocking::Client; // Agora funcionará corretamente
+use csv::Writer;
+use reqwest::blocking::Client; // Agora funcionará corretamente⏎
 use serde_json;
 use std::fs::OpenOptions;
-use csv::Writer;
 use chrono;
 
-/*
-    Busca os sensores de temperatura conectados ao Raspberry Pi.
-    Os sensores de temperatura são conectados ao Raspberry Pi através do barramento 1-Wire.
-    O barramento 1-Wire é um barramento serial que permite a comunicação de dados com dispositivos
-    utilizando apenas um fio de dados.
-    Os sensores de temperatura DS18B20 são dispositivos que utilizam o barramento 1-Wire para
-    medir a temperatura ambiente.
-    Cada sensor DS18B20 possui um identificador único de 64 bits que é utilizado para identificar
-    o sensor no barramento 1-Wire.
-    O identificador do sensor é utilizado para acessar os dados de temperatura do sensor.
-    O identificador do sensor é armazenado em um arquivo no diretório /sys/bus/w1/devices.
-    O identificador do sensor é um diretório que contém um arquivo chamado w1_slave que contém os
-    dados de temperatura do sensor.
-    O arquivo w1_slave contém os dados de temperatura em graus Celsius.
-*/
+
+
+///    Busca os sensores de temperatura conectados ao Raspberry Pi.
+///    Os sensores de temperatura são conectados ao Raspberry Pi através do barramento 1-Wire.
+///    O barramento 1-Wire é um barramento serial que permite a comunicação de dados com dispositivos
+///    utilizando apenas um fio de dados.
+///    Os sensores de temperatura DS18B20 são dispositivos que utilizam o barramento 1-Wire para
+///    medir a temperatura ambiente.
+///    Cada sensor DS18B20 possui um identificador único de 64 bits que é utilizado para identificar
+///    o sensor no barramento 1-Wire.
+///    O identificador do sensor é utilizado para acessar os dados de temperatura do sensor.
+///    O identificador do sensor é armazenado em um arquivo no diretório /sys/bus/w1/devices.
+///    O identificador do sensor é um diretório que contém um arquivo chamado w1_slave que contém os
+///    dados de temperatura do sensor.
+///    O arquivo w1_slave contém os dados de temperatura em graus Celsius.
+
 
 // Função que retorna uma lista com os identificadores dos sensores de temperatura conectados ao Raspberry Pi.
 pub fn get_sensor_ids() -> Result<Vec<String>, Error> {
