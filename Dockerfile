@@ -20,8 +20,15 @@ COPY config.json /usr/local/bin/config.json
 COPY configcli.json /usr/local/bin/configcli.json
 
 # Cria o link simbólico para o syslog
-RUN mkdir -p /run/systemd/journal && ln -s /run/systemd/journal/dev-log /dev/log
+#RUN mkdir -p /run/systemd/journal/dev-log && ln -s /run/systemd/journal/dev-log /dev/log
 	
+# Não Expõe as portas, mas documenta
+EXPOSE 3333
+EXPOSE 1111
+
+# Define variáveis de ambiente (opcional, se forem fixas)
+ENV RUST_LOG=info
+
 # Define o comando padrão
 #CMD ["server"]
 CMD ["/usr/local/bin/server"]

@@ -107,8 +107,7 @@ server = nome da imagem
 .      = diretorio do contexto do docker todas as cópias do host para a imagem tem que ser relativa a esse diretório.
 
 Para executar a imagem e gerar um container
-sudo docker run -it --rm -e RUST_LOG=info -v /run/systemd/journal/dev-log:/run/systemd/journal/dev-log -p 3333:3333 -p 1111:1111 server
-
+sudo docker run -it --rm --name RackBoxServer -e RUST_LOG=info -v /run/systemd/journal/dev-log:/run/systemd/journal/dev-log -p 3333:3333 -p 1111:1111 server
 
 
 

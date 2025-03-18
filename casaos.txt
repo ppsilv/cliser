@@ -1,0 +1,77 @@
+Para instalar um container que já está rodando normalmente no **CasaOS**, você precisa adicioná-lo como uma aplicação personalizada no CasaOS. Vou te guiar passo a passo para fazer isso.
+
+---
+
+### **Passo a passo para instalar o container no CasaOS**
+
+#### 1. **Verifique se o container está rodando**
+Primeiro, certifique-se de que o container está rodando corretamente. Use o comando:
+```bash
+sudo docker ps
+```
+
+Você deve ver o container na lista, algo como:
+```
+CONTAINER ID   IMAGE     COMMAND                  CREATED         STATUS         PORTS                                            NAMES
+abc123def456   server    "/usr/local/bin/server"  5 seconds ago   Up 4 seconds   0.0.0.0:1111->1111/tcp, 0.0.0.0:3333->3333/tcp   meu_container
+```
+
+#### 2. **Acesse a interface do CasaOS**
+Abra o CasaOS no seu navegador. Geralmente, ele está acessível em:
+```
+http://<ip-do-seu-servidor>
+```
+
+#### 3. **Adicione uma aplicação personalizada**
+No CasaOS, siga estes passos:
+1. Clique em **"App Store"** no menu lateral.
+2. Clique em **"Add App"** (ou "Adicionar Aplicação").
+3. Selecione **"Custom App"** (ou "Aplicação Personalizada").
+
+#### 4. **Preencha os detalhes do container**
+Na tela de configuração da aplicação personalizada, preencha os seguintes campos:
+
+- **App Name**: Nome da aplicação (por exemplo, `Meu Servidor`).
+- **Icon**: Escolha um ícone para a aplicação (opcional).
+- **Image**: Insira o nome da imagem Docker que você está usando (por exemplo, `server`).
+- **Ports**: Adicione as portas que o container expõe. Por exemplo:
+  - `3333:3333`
+  - `1111:1111`
+- **Volumes**: Se o container usa volumes (como para persistência de dados), adicione-os aqui. Por exemplo:
+  - `/run/systemd/journal/dev-log:/run/systemd/journal/dev-log`
+- **Environment Variables**: Adicione variáveis de ambiente, se necessário. Por exemplo:
+  - `RUST_LOG=info`
+- **Network Mode**: Deixe como `bridge` (modo padrão) ou ajuste conforme necessário.
+- **Restart Policy**: Escolha a política de reinicialização (por exemplo, `always` para reiniciar automaticamente).
+
+#### 5. **Salve e inicie a aplicação**
+Depois de preencher todos os campos, clique em **"Save"** (ou "Salvar"). O CasaOS criará a aplicação e iniciará o container.
+
+#### 6. **Verifique a aplicação no CasaOS**
+Após a instalação, a aplicação aparecerá na tela inicial do CasaOS. Você pode clicar nela para acessar a interface ou verificar os logs.
+
+---
+
+### **Exemplo de configuração no CasaOS**
+Aqui está um exemplo de como preencher os campos no CasaOS:
+
+| Campo                  | Valor                                      |
+|------------------------|--------------------------------------------|
+| App Name               | Meu Servidor                               |
+| Icon                   | Escolha um ícone                           |
+| Image                  | server                                     |
+| Ports                  | `3333:3333`, `1111:1111`                   |
+| Volumes                | `/run/systemd/journal/dev-log:/run/systemd/journal/dev-log` |
+| Environment Variables  | `RUST_LOG=info`                            |
+| Network Mode           | `bridge`                                   |
+| Restart Policy         | `always`                                   |
+
+---
+
+### **Resumo**
+1. Verifique se o container está rodando com `docker ps`.
+2. Acesse o CasaOS e adicione uma aplicação personalizada.
+3. Preencha os detalhes do container (nome, imagem, portas, volumes, etc.).
+4. Salve e inicie a aplicação.
+
+Se seguir esses passos, o container será adicionado ao CasaOS e gerenciado por ele. Se precisar de mais ajuda, é só perguntar! 😊
