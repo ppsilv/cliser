@@ -13,8 +13,13 @@ path = "src/bin/client.rs"
 name = "server"
 path = "src/bin/server.rs"
 
+[[bin]]
+name = "agent"
+path = "src/bin/agent.rs"
+
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.140"
 syslog = "7.0.0"
 log = "0.4"
 libc = "0.2"
@@ -23,7 +28,8 @@ ctrlc = "3.4"
 lazy_static = "1.4"
 rppal = "0.22.1"
 reqwest = { version = "0.11", features = ["blocking"] }
-serde_json = "1.0"
 csv = "1.1"
 chrono = "0.4"
-simple_logger = "4.0"
+simple_logger = "5.0"
+regex = "1.5"
+
