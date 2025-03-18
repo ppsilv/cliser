@@ -22,7 +22,7 @@ struct ServerConfig {
 lazy_static! {
     static ref CONFIG: Config = {
         // Read the configuration file
-        let config_file = fs::read_to_string("config.json").unwrap();
+        let config_file = fs::read_to_string("/usr/local/bin/config.json").unwrap();
         // Parse the JSON into the Config struct
         serde_json::from_str(&config_file).unwrap()
     };

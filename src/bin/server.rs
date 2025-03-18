@@ -5,6 +5,8 @@ use std::io::{Read, Write};
 use std::time::Duration;
 use syslog::{Facility, Formatter3164, BasicLogger};
 use std::process;
+use log::{info, error};
+
 mod configser;
 
 mod clientdata;
@@ -219,6 +221,7 @@ fn tcp_writer(mut stream: TcpStream, receiver: mpsc::Receiver<String>) {
 fn main() {
    // let args: Vec<String> = env::args().collect();
 
+    info!("Iniciando servidor...");
     let formatter = Formatter3164 {
         facility: Facility::LOG_USER,
         hostname: None,
@@ -227,7 +230,9 @@ fn main() {
     };
 
     // Initialize the logger
-    let logger = syslog::unix(formatter).expect("could not connect to syslog");
+    //let logger = syslog::unix(formatter).expect("could not connect to syslog");
+        let logger = syslog::unix_custom(formatter, "/run/systemd/journal/dev-log")
+        .expect("could not connect to syslog");
 
     // Set the logger as the global logger
     log::set_boxed_logger(Box::new(BasicLogger::new(logger)))
